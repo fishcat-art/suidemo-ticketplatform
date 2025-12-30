@@ -1,58 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { useEffect, useState } from 'react';
 import TicketCard from './TicketCard';
-import { useSuiWallet } from '../hooks/useWallet';
 
-interface Props {
-  userAddress: string | null;
-}
+const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID;
 
-interface Ticket {
-  id: string;
-  event: string;
-  artist: string;
-  date: string;
-  price: bigint;
-  image: string;
-  escrowId: string;
-}
+export default function TicketMarketplace() {
+  const account = useCurrentAccount();
+  const suiClient = useSuiClient();
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-const mockTickets: Ticket[] = [
-  {
-    id: '0x1',
-    event: 'Sui Jazz Festival',
-    artist: 'Miles Davis Tribute',
-    date: '2026-01-15',
-    price: 5000000000n, // 5 SUI
-    image: 'https://images.unsplash.com/photo-1511671782779-cb56e135bd39?w=400',
-    escrowId: '0xescrow1'
-  },
-  {
-    id: '0x2',
-    event: 'Electronic Night',
-    artist: 'DJ SUI',
-    date: '2026-01-20',
-    price: 3000000000n, // 3 SUI
-    image: 'https://images.unsplash.com/photo-1613040809024-b4ef374e73c2?w=400',
-    escrowId: '0xescrow2'
+  useEffect(() => {
+    if (!account) return;
+
+    const loadTickets = async () => {
+      setLoading(true);
+
+      const res = await suiClient.getOwnedObjects({
+        owner: account.address,
+        filter: {
+          StructType: `${PACKAGE_ID}::ticket_nft::Ticket`,
+        },
+        options: {
+          showContent: true,
+        },
+      });
+
+      setTickets(res.data);
+      setLoading(false);
+    };
+
+    loadTickets();
+  }, [account, suiClient]);
+
+  if (!account) {
+    return <p>Please connect your wallet</p>;
   }
-];
 
-export default function TicketMarketplace({ userAddress }: Props) {
-  const [tickets, setTickets] = useState(mockTickets);
-  const { buyTicket } = useSuiWallet();
+  if (loading) {
+    return <p>Loading tickets...</p>;
+  }
+
+  if (tickets.length === 0) {
+    return <p>You don’t own any tickets yet.</p>;
+  }
 
   return (
-    <div className="mt-16">
-      <h2 className="text-4xl font-black mb-12 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-        🎟️ Available Tickets
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tickets.map((ticket) => (
+    <div>
+      <h2>My Tickets</h2>
+      <div style={{ display: 'grid', gap: 16 }}>
+        {tickets.map((obj) => (
           <TicketCard
-            key={ticket.id}
-            ticket={ticket}
-            userAddress={userAddress}
-            onBuy={buyTicket}
+            key={obj.data?.objectId}
+            ticketObject={obj}
           />
         ))}
       </div>

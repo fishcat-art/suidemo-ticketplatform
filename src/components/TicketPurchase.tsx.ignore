@@ -1,0 +1,18 @@
+import { buildTicketPurchaseTx } from '../services/payment';
+import { useSponsoredTx } from '../hooks/useSponsoredTx';
+
+export function TicketPurchase({ event }: any) {
+  const { executeSponsored } = useSponsoredTx();
+
+  async function buy() {
+    const tx = buildTicketPurchaseTx(
+      event.id,
+      event.price,
+      event.organizer
+    );
+    await executeSponsored(tx);
+    alert('Ticket purchased!');
+  }
+
+  return <button onClick={buy}>Buy Ticket</button>;
+}

@@ -1,0 +1,18 @@
+import { useState } from 'react';
+import { conversationalSearch } from '../services/search';
+
+export function SearchBox({ onResult }: any) {
+  const [q, setQ] = useState('');
+
+  async function search() {
+    const result = await conversationalSearch(q);
+    onResult(result);
+  }
+
+  return (
+    <>
+      <input value={q} onChange={e => setQ(e.target.value)} />
+      <button onClick={search}>Search</button>
+    </>
+  );
+}

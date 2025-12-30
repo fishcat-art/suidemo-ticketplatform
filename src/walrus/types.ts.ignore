@@ -1,0 +1,25 @@
+export interface TicketMetadata {
+  version: "1.0";
+  event: {
+    id: string;
+    title: string;
+    description: string;
+    category: "art" | "music" | "event" | "performance";
+    startTime: string; // ISO
+    endTime: string;   // ISO
+    location: string;
+  };
+  ticket: {
+    ticketType: string; // VIP / General / Early Bird
+    priceMist: number;
+    seat?: string;
+  };
+  media: {
+    coverImage: string; // image URL or walrus blob ref
+    animationUrl?: string; // music / video
+  };
+  organizer: {
+    name: string;
+    wallet: string;
+  };
+}
