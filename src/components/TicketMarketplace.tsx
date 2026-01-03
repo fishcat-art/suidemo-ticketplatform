@@ -1,61 +1,59 @@
-import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
-import { useEffect, useState } from 'react';
+import { useCurrentWallet } from '@mysten/dapp-kit';
 import TicketCard from './TicketCard';
+import { events } from '../data/events';
+import type { Event, EventCategory } from '../types/Event';
 
-const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID;
+//export default function TicketMarketplace() {
+export default function TicketMarketplace({
+  onAddToCart,
+}: {
+  onAddToCart: (event: Event) => void;
+}) {
+  const { connectionStatus } = useCurrentWallet();
 
-export default function TicketMarketplace() {
-  const account = useCurrentAccount();
-  const suiClient = useSuiClient();
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!account) return;
-
-    const loadTickets = async () => {
-      setLoading(true);
-
-      const res = await suiClient.getOwnedObjects({
-        owner: account.address,
-        filter: {
-          StructType: `${PACKAGE_ID}::ticket_nft::Ticket`,
-        },
-        options: {
-          showContent: true,
-        },
-      });
-
-      setTickets(res.data);
-      setLoading(false);
-    };
-
-    loadTickets();
-  }, [account, suiClient]);
-
-  if (!account) {
-    return <p>Please connect your wallet</p>;
+  if (connectionStatus !== 'connected') {
+    return <div>Please connect wallet</div>;
   }
 
-  if (loading) {
-    return <p>Loading tickets...</p>;
-  }
+  // 依分類分組
+  const groupedEvents = events.reduce<Record<EventCategory, Event[]>>(
+    (acc, event) => {
+      acc[event.category] = acc[event.category] || [];
+      acc[event.category].push(event);
+      return acc;
+    },
+    {} as Record<EventCategory, Event[]>,
+  );
 
-  if (tickets.length === 0) {
-    return <p>You don’t own any tickets yet.</p>;
-  }
+  // const handleAddToCart = (event: Event) => {
+  //   console.log('Add to cart:', event);
+  //   alert(`Added "${event.title}" to cart (demo)`);
+  // };
 
   return (
     <div>
-      <h2>My Tickets</h2>
-      <div style={{ display: 'grid', gap: 16 }}>
-        {tickets.map((obj) => (
-          <TicketCard
-            key={obj.data?.objectId}
-            ticketObject={obj}
-          />
-        ))}
-      </div>
+      {Object.entries(groupedEvents).map(([category, categoryEvents]) => (
+        <section key={category} style={{ marginBottom: 48 }}>
+          <h2 style={{ marginBottom: 16 }}>{category}</h2>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 24,
+              flexWrap: 'wrap',
+            }}
+          >
+            {categoryEvents.map((event) => (
+              <TicketCard
+                key={event.id}
+                event={event}
+                onAddToCart={(onAddToCart)}
+                //onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

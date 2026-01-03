@@ -8,6 +8,8 @@ import { getFullnodeUrl } from '@mysten/sui/client';
 
 import App from './App';
 
+import '@mysten/dapp-kit/dist/index.css';
+
 const queryClient = new QueryClient();
 
 const networks = {

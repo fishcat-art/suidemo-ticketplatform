@@ -14,7 +14,7 @@ module ticket_platform_contracts::ticket_nft {
     public struct Ticket has key, store {
         id: UID,
         event_id: vector<u8>,
-        metadata_uri: vector<u8>,
+        metadata_uri: vector<u8>,            // 內容格式 b"walrus:xxxxxx"
         owner: address,
     }
 
@@ -29,6 +29,7 @@ module ticket_platform_contracts::ticket_nft {
     const TICKET_PRICE: u64 = 1_000_000;
 
     /// 使用者付款 + mint 票
+    /// metadata_uri 由前端從 backend (Walrus) 取得後傳入
     public entry fun buy_ticket(
         event_id: vector<u8>,
         metadata_uri: vector<u8>,

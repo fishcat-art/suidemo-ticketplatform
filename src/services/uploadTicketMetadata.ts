@@ -1,23 +1,34 @@
-import { createWalrusClient } from '../walrus/walrusClient';
 import type { TicketMetadata } from '../types/TicketMetadata';
-import { SuiClient } from '@mysten/sui/client';
-import { Signer } from '@mysten/sui/cryptography';
 
 export async function uploadTicketMetadata(
   metadata: TicketMetadata,
-  suiClient: SuiClient,
-  signer: Signer,
 ): Promise<string> {
-  const walrus = createWalrusClient(suiClient);
-
-  const bytes = new TextEncoder().encode(JSON.stringify(metadata));
-
-  const result = await walrus.writeBlob({
-    blob: bytes,
-    deletable: false,
-    epochs: 10,
-    signer,
+  const res = await fetch('/api/upload-metadata', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
   });
 
-  return `walrus://${result.blobId}`;
+  if (!res.ok) {
+    throw new Error('Upload metadata failed');
+  }
+
+  const data = await res.json();
+  return data.uri as string; // e.g. walrus:xxx
 }
+/*
+export async function uploadTicketMetadata(metadata: unknown): Promise<string> {
+  const res = await fetch('/api/upload-metadata', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
+  });
+
+  if (!res.ok) {
+    throw new Error('Upload metadata failed');
+  }
+
+  const { uri } = await res.json();
+  return uri;
+}
+*/
